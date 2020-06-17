@@ -131,3 +131,4 @@ dmypy.json
 .pyre/
 
 omniglot_resized/
+.idea/
