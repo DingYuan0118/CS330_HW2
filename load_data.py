@@ -144,5 +144,5 @@ class DataGenerator(object):
 			all_label_batches.append(labels)
 		all_image_batches = np.stack(all_image_batches)
 		all_label_batches = np.stack(all_label_batches)
-
+		# image batch has shape [B, N, K, 784] and label batch has shape [B, N, K, N]
 		return all_image_batches, all_label_batches
