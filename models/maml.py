@@ -83,34 +83,42 @@ class MAML:
                 # inner gradient descent
                 task_outputa, task_lossa, task_accuracya = None, None, None
                 task_outputbs, task_lossesb, task_accuraciesb = [], [], []
-                outputa = self.forward_conv(inputa, weights=self.weights, reuse=reuse)
+                outputa = self.forward_conv(inputa, weights=weights, reuse=reuse)
                 lossa = self.loss_func(outputa, labela)
                 task_outputa = outputa
                 task_lossa = lossa
                 task_accuracya = tf.contrib.metrics.accuracy(tf.argmax(tf.nn.softmax(task_outputa, dim=1), axis=1),
                                                              tf.argmax(labela, axis=1))
                 # first inner_loop update
-                grads = tf.gradients(lossa, list(self.weights.values()))
-                inner_grads = dict(zip(self.weights.keys(), grads))
-                new_weights = dict(zip(self.weights.keys(),
-                                   [self.weights[key] - self.inner_update_lr * inner_grads[key] for key in
-                                    self.weights.keys()]))
-                for _ in range(num_inner_updates):
+                grads = tf.gradients(lossa, list(weights.values()))
+                inner_grads = dict(zip(weights.keys(), grads))
+                new_weights = dict(zip(weights.keys(),
+                                   [weights[key] - self.inner_update_lr * inner_grads[key] for key in
+                                    weights.keys()]))
+                outputb = self.forward(inputb, new_weights, reuse=True)
+                # meta-test loss
+                lossb = self.loss_func(outputb, labelb)
+                # record T0 pred and loss for meta-test
+                task_outputbs.append(outputb)
+                task_lossesb.append(lossb)
+
+                for _ in range(1, num_inner_updates):
                     outputa = self.forward_conv(inputa, weights=new_weights, reuse=True)
                     lossa = self.loss_func(outputa, labela)
-                    grads = tf.gradients(lossa, list(weights.values()))
-                    inner_grads = dict(zip(weights.keys(), grads))
-                    new_weights = dict(zip(self.weights.keys(),
-                                       [self.weights[key] - self.inner_update_lr * inner_grads[key] for key in
-                                        self.weights.keys()]))
-                    outputb = self.forward_conv(inputb, weights=weights, reuse=True)
+                    grads = tf.gradients(lossa, list(new_weights.values()))
+                    inner_grads = dict(zip(new_weights.keys(), grads))
+                    new_weights = dict(zip(new_weights.keys(),
+                                       [new_weights[key] - self.inner_update_lr * inner_grads[key] for key in
+                                        new_weights.keys()]))
+                    outputb = self.forward_conv(inputb, weights=new_weights, reuse=True)
 
                     lossb = self.loss_func(outputb, labelb)
-                    accb = tf.contrib.metrics.accuracy(tf.argmax(tf.nn.softmax(outputb, dim=1), axis=1),
-                                                tf.argmax(labelb, axis=1))
                     task_outputbs.append(outputb)
                     task_lossesb.append(lossb)
-                    task_accuraciesb.append(accb)
+                for i in range(num_inner_updates):
+                    task_accuraciesb.append(
+                        tf.contrib.metrics.accuracy(tf.argmax(tf.nn.softmax(task_outputbs[i], dim=1), axis=1),
+                                                    tf.argmax(labelb, axis=1)))
                 #############################
 
                 task_output = [task_outputa, task_outputbs, task_lossa, task_lossesb, task_accuracya, task_accuraciesb]

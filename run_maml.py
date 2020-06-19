@@ -89,6 +89,7 @@ def meta_train(model, saver, sess, exp_string, data_generator, resume_itr=0):
                                  model.total_accuracy1, model.total_accuracies2[FLAGS.num_inner_updates - 1]])
 
         result = sess.run(input_tensors, feed_dict)
+        #print(result[0].weights)
 
         if itr % SUMMARY_INTERVAL == 0:
             pre_accuracies.append(result[-2])
