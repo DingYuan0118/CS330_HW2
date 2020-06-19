@@ -112,12 +112,12 @@ def meta_train(model, saver, sess, exp_string, data_generator, resume_itr=0):
             image_batch, label_batch = data_generator.sample_batch(batch_type="meta_val",
                                                                    batch_size=FLAGS.meta_batch_size)
             # image batch has shape [B, N, K, 784] and label batch has shape [B, N, K, N]
-            K = image_batch.shape[2] / 2  # k-shot
+            K = int(image_batch.shape[2] / 2)  # k-shot
 
             inputa = image_batch[:, :, :K, :]
             labela = label_batch[:, :, :K, :]
-            inputb = image_batch[:, :, :K, :]
-            labelb = label_batch[:, :, :K, :]
+            inputb = image_batch[:, :, K:, :]
+            labelb = label_batch[:, :, K:, :]
 
             # inputa, inputb, labela, labelb = None, None, None, None
             #############################
@@ -152,12 +152,12 @@ def meta_test(model, saver, sess, exp_string, data_generator, meta_test_num_inne
         image_batch, label_batch = data_generator.sample_batch(batch_type="meta_test",
                                                                batch_size=FLAGS.meta_batch_size)
         # image batch has shape [B, N, K, 784] and label batch has shape [B, N, K, N]
-        K = image_batch.shape[2] / 2  # k-shot
+        K = int(image_batch.shape[2] / 2)  # k-shot
 
         inputa = image_batch[:, :, :K, :]
         labela = label_batch[:, :, :K, :]
-        inputb = image_batch[:, :, :K, :]
-        labelb = label_batch[:, :, :K, :]
+        inputb = image_batch[:, :, K:, :]
+        labelb = label_batch[:, :, K:, :]
 
         #inputa, inputb, labela, labelb = None, None, None, None
         #############################
